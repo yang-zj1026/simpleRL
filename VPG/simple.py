@@ -18,7 +18,7 @@ def mlp(size, activation=nn.Tanh, output_activation=nn.Identity):
 
 # The training process
 def train(env_name='CartPoleNoFramskip-v4', hidden_sizes=32, lr=1e-2,
-          epochs=50, batch_size=5000):
+          epochs=50, batch_size=5000, render=False):
     # make environment, check type of spaces, get obs / act dims
     env = gym.make(env_name)
     assert isinstance(env.observation_space, Box), \
@@ -63,12 +63,17 @@ def train(env_name='CartPoleNoFramskip-v4', hidden_sizes=32, lr=1e-2,
         done = False        # signal from environment suggesting that episode is over
         ep_rewards = []     # list for rewards accrued throughout ep
 
+        # render first episode of each epoch
+        finished_rendering_this_epoch = False
+
         # collect experience by acting in the environment with current policy
         while True:
-            # save obs
-            batch_obs.append(obs.copy())
+            # rendering
+            if (not finished_rendering_this_epoch) and render:
+                env.render()
 
-            # act in the environment
+            # save obs and act in the environment
+            batch_obs.append(obs.copy())
             act = get_action(torch.tensor(obs, dtype=torch.float32))
             obs, reward, done, _ = env.step(act)
 
@@ -115,7 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1e-2)
     args = parser.parse_args()
     print('\nUsing simplest formulation of policy gradient.\n')
-    train(env_name=args.env_name, lr=args.lr, batch_size=5000)
+    train(env_name=args.env_name, lr=args.lr)
 
 
 
