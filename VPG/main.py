@@ -1,12 +1,8 @@
+import gym
 import numpy as np
 import torch
 from torch.optim import Adam
-import gym
-import utils as core
-import torch
-from torch.optim import Adam
-import gym
-import time
+
 import utils as core
 
 
@@ -14,9 +10,7 @@ class VPGBuffer:
     """
     A buffer for storing trajectories and using Generalized Advantage Estimation (GAE-Lambda)
     for calculating the advantages of state-action pairs.
-<<<<<<< HEAD
     """
-
     def __init__(self, obs_dim, action_dim, size, gamma=0.99, lam=0.95):
         self.obs_buffer = np.zeros(core.combined_shape(size, obs_dim), dtype=np.float32)
         self.action_buffer = np.zeros(core.combined_shape(size, action_dim), dtype=np.float32)
@@ -108,6 +102,7 @@ class VPG:
         self.lam = lam
         self.max_ep_len = max_ep_len
         self.log_interval = log_interval
+        self.buffer = None
 
     def compute_loss_pi(self, data):
         obs, action, adv = data['obs'], data['act'], data['adv']
@@ -122,16 +117,15 @@ class VPG:
         ret = data['ret']
         return ((self.ac.v(obs) - ret) ** 2).mean()
 
-    def update(self, buf, pi_optimizer, value_optimizer):
-        data = buf.get_data()
-        loss_pi_old = self.compute_loss_pi(data).item()
-        loss_v_old = self.compute_loss_v(data).item()
+    def update(self, pi_optimizer, value_optimizer):
+        data = self.buffer.get_data()
 
         # Train policy with a single step of gradient descent
         pi_optimizer.zero_grad()
         loss_pi = self.compute_loss_pi(data)
         loss_pi.backward()
         pi_optimizer.step()
+        loss_pi = self.compute_loss_pi(data)
 
         # Value function learning
         for i in range(self.train_v_iters):
@@ -140,7 +134,7 @@ class VPG:
             loss_v.backward()
             value_optimizer.step()
 
-        return loss_pi_old, loss_v_old, loss_pi.item(), loss_v.item()
+        return loss_pi.item(), loss_v.item()
 
     def train(self):
         torch.manual_seed(self.seed)
@@ -153,8 +147,8 @@ class VPG:
         # Create actor-critic module
         self.ac = self.actor_critic(env.observation_space, env.action_space)
 
-        buffer = VPGBuffer(obs_dim=obs_dim, action_dim=action_dim, size=self.steps_per_epoch,
-                           gamma=self.gamma, lam=self.lam)
+        self.buffer = VPGBuffer(obs_dim=obs_dim, action_dim=action_dim, size=self.steps_per_epoch,
+                                gamma=self.gamma, lam=self.lam)
 
         pi_optimizer = Adam(self.ac.pi.parameters(), lr=self.pi_lr)
         value_optimizer = Adam(self.ac.v.parameters(), lr=self.value_lr)
@@ -169,7 +163,7 @@ class VPG:
                 ep_len += 1
                 obs = next_obs
 
-                buffer.store(obs, action, reward, value, logp)
+                self.buffer.store(obs, action, reward, value, logp)
 
                 timeout = (ep_len == self.max_ep_len)
                 terminal = (done or timeout)
@@ -183,19 +177,20 @@ class VPG:
                         _, v, _ = self.ac.step(torch.tensor(obs, dtype=torch.float32))
                     else:
                         v = 0
-                    buffer.finish_path(v)
+                    self.buffer.finish_path(v)
                     num_eps += 1
                     obs, ep_ret, ep_len = env.reset(), 0, 0
 
-            loss_pi_old, loss_v_old, loss_pi, loss_v = self.update(buf=buffer, pi_optimizer=pi_optimizer,
+            loss_pi, loss_v = self.update(pi_optimizer=pi_optimizer,
                                                                    value_optimizer=value_optimizer)
 
             if epoch % self.log_interval == 0:
-                print("Epoch: %3d, Reward: %.4f, Policy Loss: %.4f, Value Loss: %.4f "
-                      % (epoch, ep_return / num_eps, loss_pi_old, loss_v_old))
+                print("Epoch: %3d, Reward: %.4f, Policy Loss: %.4f, Value Loss: %.4f"
+                      % (epoch, ep_return / num_eps, loss_pi, loss_v))
+
             if epoch == self.epoch - 1:
-                print("Epoch: %3d, Reward: %.4f, Policy Loss: %.4f, Value Loss: %.4f "
-                      % (epoch, ep_return / num_eps, loss_pi_old, loss_v_old))
+                print("Epoch: %3d, Reward: %.4f, Policy Loss: %.4f, Value Loss: %.4f"
+                      % (epoch, ep_return / num_eps, loss_pi, loss_v))
 
 
 if __name__ == '__main__':
@@ -206,7 +201,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--seed', '-s', type=int, default=0)
     parser.add_argument('--cpu', type=int, default=4)
-    parser.add_argument('--steps', type=int, default=5000)
+    parser.add_argument('--steps', type=int, default=4000)
     parser.add_argument('--epoch', type=int, default=100)
     args = parser.parse_args()
 
@@ -214,4 +209,3 @@ if __name__ == '__main__':
               steps_per_epoch=args.steps, epoch=args.epoch, log_interval=10)
 
     vpg.train()
-
