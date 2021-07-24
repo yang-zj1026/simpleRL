@@ -17,7 +17,7 @@ def mlp(size, activation=nn.Tanh, output_activation=nn.Identity):
 
 
 # The training process
-def train(env_name='CartPoleNoFramskip-v4', hidden_sizes=32, lr=1e-2,
+def train(env_name, hidden_sizes=32, lr=1e-2,
           epochs=50, batch_size=5000, render=False):
     # make environment, check type of spaces, get obs / act dims
     env = gym.make(env_name)

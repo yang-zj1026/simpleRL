@@ -19,7 +19,7 @@ def mlp(size, activation=nn.Tanh, output_activation=nn.Identity):
 def reward_to_go(rewards):
     n = len(rewards)
     rtgs = np.zeros_like(rewards)
-    for i in reversed(range(n)):
+    for i in range(n - 1, -1, -1):
         rtgs[i] = rewards[i] + (rtgs[i + 1] if i + 1 < n else 0)
     return rtgs
 
@@ -59,17 +59,17 @@ def train(env_name='CartPoleNoFramskip-v4', hidden_sizes=32, lr=1e-2,
 
     def train_one_epoch():
         # make some empty lists for logging.
-        batch_obs = []        # for observations
-        batch_acts = []       # for actions
-        batch_weights = []    # for return R(tau) weighting in policy gradient
-        batch_returns = []    # for episode returns
-        batch_lens = []       # for episode lengths
+        batch_obs = []  # for observations
+        batch_acts = []  # for actions
+        batch_weights = []  # for return R(tau) weighting in policy gradient
+        batch_returns = []  # for episode returns
+        batch_lens = []  # for episode lengths
         batch_loss = 0
 
         # reset episode-specific variables
-        obs = env.reset()   # first obs comes from starting distribution
-        done = False        # signal from environment suggesting that episode is over
-        ep_rewards = []     # list for rewards accrued throughout ep
+        obs = env.reset()  # first obs comes from starting distribution
+        done = False  # signal from environment suggesting that episode is over
+        ep_rewards = []  # list for rewards accrued throughout ep
 
         # render first episode of each epoch
         finished_rendering_this_epoch = False
@@ -123,6 +123,7 @@ def train(env_name='CartPoleNoFramskip-v4', hidden_sizes=32, lr=1e-2,
 
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--env_name', '--env', type=str, default='CartPole-v0')
     parser.add_argument('--render', action='store_true')
@@ -130,7 +131,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print('\nUsing simplest formulation of policy gradient.\n')
     train(env_name=args.env_name, lr=args.lr)
-
-
-
-
