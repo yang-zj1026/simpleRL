@@ -1,16 +1,13 @@
-<<<<<<< HEAD
 import numpy as np
 import torch
 from torch.optim import Adam
 import gym
 import utils as core
-=======
 import torch
 from torch.optim import Adam
 import gym
 import time
-import models as core
->>>>>>> 0abda3f85654a2574a8a5bb599ac4d8ad34873fc
+import utils as core
 
 
 class VPGBuffer:
@@ -217,6 +214,4 @@ if __name__ == '__main__':
               steps_per_epoch=args.steps, epoch=args.epoch, log_interval=10)
 
     vpg.train()
-=======
-    """
->>>>>>> 0abda3f85654a2574a8a5bb599ac4d8ad34873fc
+
