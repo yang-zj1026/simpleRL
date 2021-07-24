@@ -24,5 +24,9 @@ Policy gradient implementations typically compute advantage function estimates b
 
 ##Usage
 
+<<<<<<< HEAD
 + Train: `python main.py`
+=======
++ Train: ``
+>>>>>>> 0abda3f85654a2574a8a5bb599ac4d8ad34873fc
 

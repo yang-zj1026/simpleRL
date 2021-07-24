@@ -1,14 +1,23 @@
+<<<<<<< HEAD
 import numpy as np
 import torch
 from torch.optim import Adam
 import gym
 import utils as core
+=======
+import torch
+from torch.optim import Adam
+import gym
+import time
+import models as core
+>>>>>>> 0abda3f85654a2574a8a5bb599ac4d8ad34873fc
 
 
 class VPGBuffer:
     """
     A buffer for storing trajectories and using Generalized Advantage Estimation (GAE-Lambda)
     for calculating the advantages of state-action pairs.
+<<<<<<< HEAD
     """
 
     def __init__(self, obs_dim, action_dim, size, gamma=0.99, lam=0.95):
@@ -208,3 +217,6 @@ if __name__ == '__main__':
               steps_per_epoch=args.steps, epoch=args.epoch, log_interval=10)
 
     vpg.train()
+=======
+    """
+>>>>>>> 0abda3f85654a2574a8a5bb599ac4d8ad34873fc
